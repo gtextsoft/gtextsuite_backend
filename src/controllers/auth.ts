@@ -1,6 +1,6 @@
 import User from "../models/user";
 import { Request, Response } from "express";
-// import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie";
+import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie";
 import { validationResult } from "express-validator";
 import { randomBytes } from "crypto";
 // import { sendVerificationEmail } from "../services/emailService";
@@ -91,7 +91,7 @@ const loginUser = async (req: Request, res: Response) => {
       }
   
       // generate token and setCookie
-      // const token = generateTokenAndSetCookie(res, user._id as string);
+      generateTokenAndSetCookie(res, user._id as string);
   
       //update loginDate
       user.lastLoginDate = new Date();
