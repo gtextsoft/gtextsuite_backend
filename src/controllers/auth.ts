@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie";
 import { validationResult } from "express-validator";
 import { randomBytes } from "crypto";
-import { sendVerificationEmail } from "../services/emailService";
+// import { sendVerificationEmail } from "../services/emailService";
 
 const registerUser = async (req: Request, res: Response) => {
     // Validate input
@@ -59,7 +59,7 @@ const registerUser = async (req: Request, res: Response) => {
               roles: newUser.roles,
               isVerified: newUser.isVerified,
             },
-          });
+        });
     } catch (error: any) {
         console.log(error);
         res.status(500).json({
@@ -99,12 +99,21 @@ const loginUser = async (req: Request, res: Response) => {
   
       res.status(200).json({
         success: true,
-        message: "Login Successfully",
+        message: "Login Successfully.",
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phoneNumber: user.phoneNumber,
+          roles: user.roles,
+          isVerified: user.isVerified,
+        },
       });
       return;
     } catch (error) {
       console.log("Error during Login", error);
-      res.status(500).json({ success: false, message: "Something went wrong." });
+      res.status(500).json({ success: false, message: "Something went wrong.", error: error });
       return;
     }
   };
@@ -276,4 +285,87 @@ const loginUser = async (req: Request, res: Response) => {
 //     }
 //   };
 
-export { registerUser, loginUser };
+// Register admin user (requires secret key)
+const registerAdmin = async (req: Request, res: Response) => {
+  // Validate input
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+
+  try {
+    const { email, password, firstName, lastName, phoneNumber, adminSecret } = req.body;
+
+    // Check admin secret key (should be in .env file)
+    const requiredSecret = process.env.ADMIN_SECRET_KEY;
+    if (!requiredSecret) {
+      res.status(500).json({
+        success: false,
+        message: "Admin registration not configured",
+      });
+      return;
+    }
+
+    if (adminSecret !== requiredSecret) {
+      res.status(403).json({
+        success: false,
+        message: "Invalid admin secret key",
+      });
+      return;
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res.status(400).json({
+        success: false,
+        message: "User with this email already exists",
+      });
+      return;
+    }
+
+    // Generate verification token
+    const verificationToken = (
+      (parseInt(randomBytes(3).toString("hex"), 16) % 900000) + 100000
+    ).toString();
+
+    const verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+    // Create admin user with admin role
+    const newAdmin = new User({
+      email,
+      password,
+      firstName,
+      lastName,
+      phoneNumber,
+      isVerified: true, // Admin can be auto-verified
+      roles: ["admin"],
+      verificationToken,
+      verificationTokenExpiresAt,
+    });
+
+    await newAdmin.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Admin registered successfully",
+      user: {
+        _id: newAdmin._id,
+        email: newAdmin.email,
+        firstName: newAdmin.firstName,
+        lastName: newAdmin.lastName,
+        phoneNumber: newAdmin.phoneNumber,
+        roles: newAdmin.roles,
+        isVerified: newAdmin.isVerified,
+      },
+    });
+  } catch (error: any) {
+    console.log("Error during admin registration:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong during admin registration",
+    });
+  }
+};
+
+export { registerUser, loginUser, registerAdmin };
