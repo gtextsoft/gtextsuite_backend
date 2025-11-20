@@ -21,6 +21,15 @@ export const authenticate = async (
   try {
     // Get token from cookie
     const token = req.cookies?.auth_token;
+    
+    // Debug logging to help troubleshoot cookie issues
+    console.log("🔐 Auth Middleware Debug:", {
+      hasCookies: !!req.cookies,
+      cookieKeys: req.cookies ? Object.keys(req.cookies) : [],
+      hasAuthToken: !!token,
+      origin: req.headers.origin,
+      userAgent: req.headers["user-agent"]?.substring(0, 50),
+    });
 
     if (!token) {
       res.status(401).json({

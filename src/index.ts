@@ -33,9 +33,10 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // Allow cookies to be sent
+  credentials: true, // CRITICAL: Allow cookies to be sent cross-origin
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Set-Cookie'], // Expose Set-Cookie header in response
 }));
 
 app.use(cookieParser()); // Parse cookies from requests
