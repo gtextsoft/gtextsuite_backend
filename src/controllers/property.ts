@@ -5,9 +5,9 @@ import { Request, Response } from "express";
 export const createProperty = async (req: Request, res: Response) => {
   try {
     // Debug: Log what we're receiving
-    console.log("Request body received:", JSON.stringify(req.body, null, 2));
-    console.log("Request body type:", typeof req.body);
-    console.log("Request body keys:", Object.keys(req.body || {}));
+    // console.log("Request body received:", JSON.stringify(req.body, null, 2));
+    // console.log("Request body type:", typeof req.body);
+    // console.log("Request body keys:", Object.keys(req.body || {}));
 
     // Check if body is empty
     if (!req.body || Object.keys(req.body).length === 0) {
